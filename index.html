@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Chatroom 1.0</title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+		<style type="text/css">
+			#contentWrap {
+				display: none;
+			}
+			#chatWrap {
+				/*float: left;*/
+				/*width: 70%*/
+			}
+			#chat {
+				height: 500px;
+				overflow-y: scroll;
+				border: 1px #000 solid;
+			}
+			#message {
+				/*width: 80%;*/
+				/*height: 25px;*/
+			}
+			#users {
+				/*float: right;*/
+				border: 1px #001 solid;
+				height: 500px;
+				/*width: 15%;*/
+				font-weight: bold;
+				overflow-y: auto;
+			}
+			.public {
+				color: blue;
+			}
+			.private {
+				color: grey;
+				font-style: italic;
+			}
+			.error {
+				color: red;
+			}
+			.disconnected {
+				color: green;
+			}
+			.system {
+				color: brown;
+			}
+
+			hr.soften {
+  			height: 1px;
+  			background-image: -webkit-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,.8), rgba(0,0,0,0));
+  			background-image:    -moz-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,.8), rgba(0,0,0,0));
+  			background-image:     -ms-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,.8), rgba(0,0,0,0));
+  			background-image:      -o-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,.8), rgba(0,0,0,0));
+  			border: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="nickWrap">
+			<p>Welcome to Chatroom! </p>
+			<form id="nickForm">
+				<div class="form-group col-md-6">
+					<label for="emailInput">Enter a username:</label>
+					<input type="text" id="nickname" placeholder="Enter username" class="form-control" aria-describedby="emailHelp">
+					<small id="nickError" class="form-text text-muted"></small>
+				</div>
+				
+				<div class="form-group col-md-6">
+					<label for="emailInput">Email address:</label>
+					<input type= "email" id="email" placeholder="Enter email" class="form-control" aria-describedby="emailHelp">
+					<small id="emailHelp" class="form-text text-muted"></small>
+				</div>
+				<button class="btn btn-primary" type="submit">Register!</input>
+			</form>
+		</div>
+		<div id="contentWrap">
+			<nav class="navbar navbar-expand-lg navbar-light bg-light">
+				<span class="h1" class="navbar-brand mb-0">Chatroom</span>
+				<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+				</button>
+				<div class="collapse navbar-collapse" id="navbarNav">
+					<ul class="navbar-nav">
+						<li class="nav-item">
+							<span class="nav-link">Logged in as: </span>
+						</li>
+						<li class="nav-item">
+							<div id="loggedUser" class="nav-link"></div>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="/">Logout</a>
+						</li>
+					</ul>
+				</div>
+			</nav>
+			<div id="chatWrap" class='container-fluid'>
+				<div class="row">
+					<div id="chat" class='col-md-10'></div>
+					<div id="users" class='col-md-2'>
+						<ul class="list-group">
+							<h3>Users</h3>
+							<div id="usersList">
+							</div>
+						</ul>
+					</div>
+				</div>
+				
+				<form id="send-message">
+					<div class="row">
+						<div class="col-md-11">
+							<input class="form-control" type="text" placeholder="Say something..." id="message"></input>
+						</div>
+						<div class="col-sm-1"><button class="btn btn-primary" type="submit">Send!</input></div>
+					</div>
+				</form>
+				
+			</div>
+			<hr class="soften" />
+			<h4>Guide</h4>
+			<p>User are able to perform the following actions:</p>
+			<ul>
+				<li>
+					<h5>Private Messsage</h5>
+					<p>/p username message</p>
+				</li>
+				<li>
+					<h5>Ban a specific User (For Admin only)</h5>
+					<p>/b username</p>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript">
+		jQuery(function($){
+			var socket = io.connect(),
+			$messageForm = $('#send-message'),
+			$messageBox = $('#message'),
+			$chat = $('#chat'),
+			$nickForm = $('#nickForm'),
+			$nickBox = $('#nickname')
+			$nickWrap = $('#nickWrap'),
+			$contentWrap = $('#contentWrap'),
+			$nickError = $('#nickError'),
+			$users = $('#usersList'),
+			$email = $('#email');
+			$loggedUser = $('#loggedUser');
+			$nickForm.submit(function(e){
+				e.preventDefault();
+				socket.emit('set nick', {'nick': $nickBox.val(), 'email': $email.val()}, function(data){
+					if(data.banned){
+						$nickError.html("<span class='error'>Your email address has been banned. Please contact the administrator.</span><br>");
+					} else {
+						if(data.notEmpty && data.noDuplicate){
+							$nickWrap.hide();
+							$contentWrap.show();
+							$loggedUser.html(data.nick);
+						}else if(data.noDuplicate == false && data.notEmpty){
+							$nickError.html("<span class='error'>The username already exists, please choose another one!</span><br>");
+						}else{
+							$nickError.html("<span class='error'>Please fill in all fields!</span><br>");
+						}
+					};
+					$nickBox.val('');
+				});
+			});
+			$messageForm.submit(function(e){
+				e.preventDefault();
+				socket.emit('send message', $messageBox.val(), function(data){
+						$chat.append("<span class='error'>Username : '" + data + "' does not exist. Please try again.</span><br/>");
+				});
+				$messageBox.val('');
+			});
+			socket.on('new message', function(data){
+				displayMessage(data);
+				$('#chat').stop ().animate ({
+				scrollTop: $('#chat')[0].scrollHeight
+				});
+			});
+			socket.on('private message', function(data){
+				$chat.append("<span class='private'>" + data.nick + ": " + data.msg + "</span>" + "<br/>");
+			});
+			socket.on('chat history', function(docs){
+				if(docs){
+					$chat.append("<span class='system'>Displaying the last 10 entries...</span>" + "<br/>");
+					for(var i=docs.length-1; i>= 0; i--){
+					displayMessage(docs[i]);
+					}
+				}else{
+					console.log("Error trying to retrieve chat history. Check if redis server is online.");
+				}
+				
+			});
+			function displayMessage(data){
+				// if (data){
+					$chat.append("<span class='public'>" + data.nick + ": " + data.msg + "</span>" + "<br/>");
+				// }else {
+																				// 	$chat.append("<span class='public'>" + "[" + Date().toString().substr(15,15) + "]" + data.nick + ": " + data.msg + "</span>" + "<br/>");
+				// }
+			};
+			socket.on('usernames', function(data){
+				html = '';
+				for(var i=0; i<data.userlist.length; i++){
+					// html +="#" + (i + 1) + ". " + data[i]+"<br/>";
+						html += "<li class='list-group-item'>" + data.userlist[i] +"</li>";
+					}
+				$users.html(html);
+			});
+			// socket.on('disconnected', function(data){
+																			// 	$chat.append("<span class='disconnected'>" + data + " has left the room." + "</span>" + "<br/>");
+			// });
+			// socket.on('joined', function(data){
+																			// 	$chat.append("<span class='disconnected'>" + data + " has entered the room." + "</span>" + "<br/>");
+			// });
+			socket.on('system message', function(data){
+				switch(data.status){
+					case 'banError':
+						$chat.append("<span class='system'>You do not have administrative rights to perform that action.</span>" + "<br/>");
+						break;
+					case 'joined':
+						$chat.append("<span class='system'>" + data.nick + " has entered the room." + "</span>" + "<br/>");
+						break;
+					case 'disconnected':
+						$chat.append("<span class='system'>" + data.nick + " has left the room." + "</span>" + "<br/>");
+						break;
+					case 'removed':
+						$chat.append("<span class='system'>" + data.nick + " has been removed." + "</span>" + "<br/>");
+				}
+				
+			});
+			socket.on('ban user', function(data){
+				if(data){
+					console.log(data + " terminated.")
+					$contentWrap.hide();
+						$nickWrap.show();
+								};
+			});
+		});
+	</script>
+</body>
+</html>

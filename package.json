@@ -1,0 +1,14 @@
+{
+  "name": "chat1",
+  "version": "0.0.1",
+  "private": "true",
+  "dependencies": {
+    "express": "4.15.4",
+    "mongoose": "^4.11.9",
+    "redis": "^2.8.0",
+    "socket.io": "2.0.3"
+  },
+  "scripts": {
+    "start": "node app.js"
+  }
+}
