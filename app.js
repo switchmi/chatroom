@@ -34,7 +34,7 @@ if (process.env.REDISTOGO_URL) {
 if (process.env.MONGODB_URI){
 
 	// var uri = require('url').parse(process.env.MONGODB_URI);
-	mongoose.connect(MONGODB_URI, function(err){
+	mongoose.connect(process.env.MONGODB_URI, function(err){
 
 	if(err){
 		console.log("Error connecting to Mongo db. Please check if server is running.");
