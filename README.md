@@ -5,3 +5,4 @@ This guide serves to provide information on the operations the user is able to p
 3. Users can private message to other users.
 4. Admin can ban a specific user.
 5. Once logged in successfully, user will see the latest 10 chat history messages.
+6. Heroku chat link : https://shrouded-harbor-49290.herokuapp.com/
