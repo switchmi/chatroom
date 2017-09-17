@@ -10,9 +10,23 @@ server.listen(3000); //start listening on port 3000
 
 // redis
 
-var redis = require('redis'),
+if (process.env.REDISTOGO_URL) {
+    // TODO: redistogo connection
+    var rtg   = require("url").parse(process.env.REDISTOGO_URL);
+	var redisClient = require("redis").createClient(rtg.port, rtg.hostname);
+	redisClient.auth(rtg.auth.split(":")[1]);
+
+} else {
+    var redis = require('redis'),
 	credentials = { "host": "127.0.0.1", "port": 6379},
 	redisClient = redis.createClient(credentials.port, credentials.host);
+}
+
+
+
+// var redis = require('redis'),
+// 	credentials = { "host": "127.0.0.1", "port": 6379},
+// 	redisClient = redis.createClient(credentials.port, credentials.host);
 
 
 
