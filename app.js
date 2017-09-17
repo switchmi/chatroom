@@ -5,7 +5,7 @@ var express = require("express"),
 	mongoose = require('mongoose'),
 	users = {};
 
-server.listen(3000); //start listening on port 3000
+server.listen(process.env.PORT || 3000); //start listening on env port or 3000 
 
 
 // redis
@@ -31,7 +31,10 @@ if (process.env.REDISTOGO_URL) {
 
 
 // mongoDb
-mongoose.connect('mongodb://localhost/chatroom', function(err){
+if (process.env.MONGODB_URI){
+
+	// var uri = require('url').parse(process.env.MONGODB_URI);
+	mongoose.connect(MONGODB_URI, function(err){
 
 	if(err){
 		console.log("Error connecting to Mongo db. Please check if server is running.");
@@ -39,6 +42,21 @@ mongoose.connect('mongodb://localhost/chatroom', function(err){
 		console.log("Mongo db successfully connected.");
 	}
 });
+
+}else{
+
+	mongoose.connect('mongodb://localhost/chatroom', function(err){
+
+	if(err){
+		console.log("Error connecting to Mongo db. Please check if server is running.");
+	}else{
+		console.log("Mongo db successfully connected.");
+	}
+});
+
+}
+
+
 
 // var chatSchema = mongoose.Schema({
 // 	nick: String,
